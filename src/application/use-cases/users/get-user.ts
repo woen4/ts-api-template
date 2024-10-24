@@ -1,4 +1,5 @@
 import * as v from "valibot";
+import { UnauthorizedError } from "~/application/errors/unauthorized.error";
 import { ValidationError } from "~/application/errors/validation.error";
 import type { IUseCase, IUseCaseResponse } from "~/application/types";
 import type { DomainError } from "~/application/types/domain-error";
@@ -21,7 +22,9 @@ export class GetUserUseCase implements IUseCase {
 
 		if (!payload.success) return left(new ValidationError(payload.issues));
 
-		const user = await this.usersRepository.findWithPosts({});
+		const user = await this.usersRepository.findUnique({});
+
+		if (!user) return left(new UnauthorizedError("User not found"));
 
 		return right({
 			message: "User retrivied successfully",

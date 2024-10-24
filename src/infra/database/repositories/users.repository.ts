@@ -32,7 +32,7 @@ export class UsersRepository {
 		return this.prisma.user.findUnique({ where });
 	}
 
-	findWithPosts(
+	findWithPostsAndReels(
 		params: Except<Prisma.UserFindManyArgs, "include" | "select" | "omit">,
 	): Promise<User<Post>[]> {
 		return this.prisma.user.findMany({

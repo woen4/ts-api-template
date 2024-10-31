@@ -1,3 +1,3 @@
-type Maybe<T> = T | null | undefined;
+type TMaybe<T> = T | null | undefined;
 
-type AsyncMaybe<T> = Promise<Maybe<T>>;
+type AsyncTMaybe<T> = Promise<TMaybe<T>>;

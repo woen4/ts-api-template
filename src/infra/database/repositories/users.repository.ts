@@ -1,13 +1,14 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import type { Except } from "type-fest";
 import type { Post, User } from "~/domain/entities";
+import type { ExtendedModel } from "~/infra/database/repositories/types";
 
 export class UsersRepository {
 	static usedAs = "usersRepository";
 
 	constructor(private readonly prisma: PrismaClient) {}
 
-	create(data: Prisma.UserCreateInput) {
+	create(data: User) {
 		return this.prisma.user.create({ data });
 	}
 
@@ -22,24 +23,36 @@ export class UsersRepository {
 		return this.prisma.user.delete({ where });
 	}
 
-	findMany(
+	async findMany(
 		params?: Except<Prisma.UserFindManyArgs, "include" | "select" | "omit">,
 	): Promise<User[]> {
-		return this.prisma.user.findMany(params);
+		const users = await this.prisma.user.findMany(params);
+
+		return users;
 	}
 
-	findUnique(where: Prisma.UserWhereUniqueInput): AsyncMaybe<User> {
-		return this.prisma.user.findUnique({ where });
+	async findUnique(where: Prisma.UserWhereUniqueInput): AsyncTMaybe<User> {
+		const user = await this.prisma.user.findUnique({ where });
+
+		if (!user) return null;
+
+		return UsersRepository.toDomain<User>(user);
 	}
 
-	findWithPostsAndReels(
+	async findWithPosts(
 		params: Except<Prisma.UserFindManyArgs, "include" | "select" | "omit">,
 	): Promise<User<Post>[]> {
-		return this.prisma.user.findMany({
+		const users = await this.prisma.user.findMany({
 			...params,
 			include: {
 				posts: true,
 			},
 		});
+
+		return users.map(UsersRepository.toDomain<User<Post>>);
+	}
+
+	static toDomain<T extends User>(user: ExtendedModel<"user">) {
+		return user as unknown as T;
 	}
 }

@@ -10,17 +10,15 @@ datasource db {
 }
 
 model User {
-  id   String @id @default(auto()) @map("_id") @db.ObjectId // UUIDv4 is not url-friendly
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
   name String
 
-  adminId String @db.ObjectId
-
-  posts Posts[]
+  posts Post[]
 
   @@map("users")
 }
 
-model Posts {
+model Post {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   title String
 

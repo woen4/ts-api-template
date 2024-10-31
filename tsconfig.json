@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
-    "target": "ES2023",
-    "moduleResolution": "node",
-    "module": "ES2022",
+    "target": "ESNext",
+    "moduleResolution": "Node",
+    "module": "ESNext",
     "lib": [
-      "ES2023"
+      "ESNext",
+      "ESNext.AsyncIterable",
     ],
     "outDir": "build",
     "strict": true,

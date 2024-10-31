@@ -1,13 +1,11 @@
-import * as v from "valibot";
+import { z } from "zod";
 
-export const vSecureString = v.pipe(
-	v.string(),
-	v.trim(),
-	v.minLength(1),
-	v.transform((value) =>
-		value
-			// Remove free accents
-			// biome-ignore lint/suspicious/noMisleadingCharacterClass: <explanation>
-			.replace(/[\u0300-\u036f]/g, ""),
-	),
-);
+const validCharactersRegex = /^[a-zA-Z0-9\s.,@_-]*$/;
+
+export const zSafeString = (extended: z.ZodString) =>
+	z
+		.string()
+		.refine((val) => validCharactersRegex.test(val), {
+			message: "A string contém caracteres inválidos.",
+		})
+		.and(extended);

@@ -1,15 +1,13 @@
-import * as v from "valibot";
-import { type DomainError, ErrorCodes } from "~/application/types/domain-error";
-
-type ValibotIssues = [v.BaseIssue<unknown>, ...v.BaseIssue<unknown>[]];
+import type { ZodError, ZodIssue } from "zod";
+import { type DomainError, ErrorCodes } from "~/application/types";
 
 export class ValidationError implements DomainError {
 	error = "Validation Error";
 	code = ErrorCodes.VALIDATION_ERROR;
-	detail: ReturnType<typeof v.flatten> | string;
+	detail: ZodIssue[] | string;
 
-	constructor(errorPayload: ValibotIssues | string) {
+	constructor(errorPayload: ZodError | string) {
 		this.detail =
-			typeof errorPayload === "string" ? errorPayload : v.flatten(errorPayload);
+			typeof errorPayload === "string" ? errorPayload : errorPayload.errors;
 	}
 }

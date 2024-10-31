@@ -1,0 +1,43 @@
+import type { Prisma, PrismaClient } from "@prisma/client";
+import type { Except } from "type-fest";
+import type { {{singularize (capitalize name)}} } from "~/domain/entities";
+import type { ExtendedModel } from "~/infra/database/repositories/types";
+
+export class {{pluralize (capitalize name)}}Repository {
+	static usedAs = "{{pluralize (lowercase name)}}Repository";
+
+	constructor(private readonly prisma: PrismaClient) {}
+
+	create(data: {{singularize (capitalize name)}}) {
+		return this.prisma.{{singularize (lowercase name)}}.create({ data });
+	}
+
+	update(params: {
+		where: Prisma.{{singularize (capitalize name)}}WhereUniqueInput;
+		data: Prisma.{{singularize (capitalize name)}}UpdateInput;
+	}) {
+		return this.prisma.{{singularize (lowercase name)}}.update(params);
+	}
+
+	delete(where: Prisma.{{singularize (capitalize name)}}WhereUniqueInput) {
+		return this.prisma.{{singularize (lowercase name)}}.delete({ where });
+	}
+
+	async findMany(
+		params?: Except<Prisma.{{singularize (capitalize name)}}FindManyArgs, "include" | "select" | "omit">,
+	): Promise<{{singularize (capitalize name)}}[]> {
+		const {{pluralize (lowercase name)}} = await this.prisma.{{singularize (lowercase name)}}.findMany(params);
+
+		return {{pluralize (lowercase name)}}.map({{pluralize (capitalize name)}}Repository.toDomain)
+	}
+
+	async findUnique(where: Prisma.{{singularize (capitalize name)}}WhereUniqueInput): AsyncTMaybe<{{singularize (capitalize name)}}> {
+		const {{singularize (lowercase name)}} = await this.prisma.{{singularize (lowercase name)}}.findUnique({ where });
+
+		return {{pluralize (capitalize name)}}Repository.toDomain({{singularize (lowercase name)}})
+	}
+
+	static toDomain<T extends {{singularize (capitalize name)}}, K extends ExtendedModel<"{{singularize (lowercase name)}}"> | null>({{singularize (lowercase name)}}: K) {
+		return {{singularize (lowercase name)}} as unknown as K extends null ? T | null : T;
+	}
+}

@@ -38,3 +38,8 @@ app.use(
 		origin: ["myapp.example.com", "http://localhost:3333"],
 	}),
 );
+
+app.onError((error, c) => {
+	console.error(error);
+	return c.text("Internal server error", 500);
+});

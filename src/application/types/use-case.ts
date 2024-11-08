@@ -1,11 +1,10 @@
 import type { DomainError } from "~/application/types/domain-error";
 import type { AsyncEither } from "~/core/logic";
 
-export type IUseCaseResponse<T = unknown> = {
+export type IUseCaseResponse<T = Record<string, unknown>> = {
 	message: string;
 	redirectTo?: string;
-	// biome-ignore lint/complexity/noBannedTypes: <explanation>
-} & (T extends Object ? { detail: T } : unknown);
+} & (T extends Record<string, unknown> ? { detail: T } : {});
 
 export interface IUseCase {
 	handle: (

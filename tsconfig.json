@@ -29,7 +29,10 @@
       "~/*": [
         "./src/*"
       ]
-    }
+    },
+    // This config is for other projects import types from this project
+    "composite": true,
+    "noEmit": true
   },
   "include": [
     "./src/**/*.ts"
@@ -37,6 +40,7 @@
   "exclude": [
     "./node_modules/*",
     "./src/**/*.spec.ts",
-    "./tests/**"
+    "./tests/**",
+    "index.d.ts"
   ],
 }

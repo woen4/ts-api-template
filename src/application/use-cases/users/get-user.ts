@@ -7,30 +7,35 @@ import { type AsyncEither, left, right } from "~/core/logic";
 
 import type { UsersRepository } from "~/infra/database/repositories";
 
-type GetUserResponse = AsyncEither<DomainError, IUseCaseResponse>;
+type GetUserResponse = IUseCaseResponse<{
+	name: string;
+}>;
 
 const schema = z.object({
-	id: zSafeString(z.string().email()),
+	id: zSafeString(z.string()),
 });
 
 export class GetUserUseCase implements IUseCase {
 	constructor(private readonly usersRepository: UsersRepository) {}
 
-	async handle(dto: z.infer<typeof schema>): GetUserResponse {
+	async handle(
+		dto: z.infer<typeof schema>,
+	): AsyncEither<DomainError, GetUserResponse> {
 		const payload = schema.safeParse(dto);
 
 		if (!payload.success) return left(new ValidationError(payload.error));
 
-		const user = await this.usersRepository.findUnique({
+		/* const user = await this.usersRepository.findUnique({
 			id: payload.data.id,
-		});
+		}); */
 
 		return right({
 			message: "User retrivied successfully",
 			detail: {
-				user,
-				values: [3, 2, 1].toSorted(),
+				name: "kaio woen",
 			},
 		});
 	}
 }
+
+const a = {} as GetUserResponse;

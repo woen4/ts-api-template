@@ -39,6 +39,7 @@ app.use(
 	}),
 );
 
+// Only for unhandled errors
 app.onError((error, c) => {
 	console.error(error);
 	return c.text("Internal server error", 500);

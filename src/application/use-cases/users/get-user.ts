@@ -1,9 +1,8 @@
 import { z } from "zod";
-import { ValidationError } from "~/application/errors/validation.error";
 import type { IUseCase, IUseCaseResponse } from "~/application/types";
 import type { DomainError } from "~/application/types/domain-error";
-import { zSafeString } from "~/application/utils";
-import { type AsyncEither, left, right } from "~/core/logic";
+import { Validate, zSafeString } from "~/application/utils";
+import { type AsyncEither, right } from "~/core/logic";
 
 import type { UsersRepository } from "~/infra/database/repositories";
 
@@ -12,30 +11,23 @@ type GetUserResponse = IUseCaseResponse<{
 }>;
 
 const schema = z.object({
-	id: zSafeString(z.string()),
+	id: zSafeString(z.string().email()),
 });
 
 export class GetUserUseCase implements IUseCase {
 	constructor(private readonly usersRepository: UsersRepository) {}
 
+	@Validate(schema)
 	async handle(
-		dto: z.infer<typeof schema>,
+		data: z.infer<typeof schema>,
 	): AsyncEither<DomainError, GetUserResponse> {
-		const payload = schema.safeParse(dto);
-
-		if (!payload.success) return left(new ValidationError(payload.error));
-
-		/* const user = await this.usersRepository.findUnique({
-			id: payload.data.id,
-		}); */
-
+		const _user = await this.usersRepository.findUnique({ id: data.id });
+		/*  */
 		return right({
-			message: "User retrivied successfully",
+			message: "User retrieved successfully",
 			detail: {
-				name: "kaio woen",
+				name: "John Doe",
 			},
 		});
 	}
 }
-
-const a = {} as GetUserResponse;

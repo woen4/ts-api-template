@@ -25,10 +25,9 @@ const genTypes = async () => {
 
 	const file = await Bun.file(declarationFilePath).text();
 
-	const result = file.replaceAll(
-		/declare module ".*" {/gm,
-		"declare module '@api-types' {",
-	);
+	const result = file
+		.replaceAll(/declare module ".*" {/gm, "declare module '@api-types' {")
+		.replaceAll(/from "src.*?"/gm, 'from  "@api-types"');
 
 	Bun.write(declarationFilePath, result);
 };

@@ -32,7 +32,6 @@
     },
     // This config is for other projects import types from this project
     "composite": true,
-    "noEmit": true
   },
   "include": [
     "./src/**/*.ts"

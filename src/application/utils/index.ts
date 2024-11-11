@@ -1,4 +1,5 @@
 import { z } from "zod";
+export * from "./validate";
 
 const validCharactersRegex = /^[a-zA-Z0-9\s.,@_-]*$/;
 

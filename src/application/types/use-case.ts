@@ -7,7 +7,7 @@ export type IUseCaseResponse<T = void> = {
 	// biome-ignore lint/complexity/noBannedTypes: <explanation>
 } & (T extends Record<string, unknown> ? { detail: T } : {});
 
-export interface IUseCase {
+export interface IUseCase<IUseCaseResponse> {
 	handle: (
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		payload?: any,

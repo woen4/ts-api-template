@@ -1,9 +1,11 @@
 import type { Context } from "hono";
 
-import type { IUseCase } from "~/application/types/use-case";
+import type { IUseCase, IUseCaseResponse } from "~/application/types/use-case";
 import { StatusErrorCodeMapper } from "./status-error-code-mapper";
 
-export const defaultHandler = (useCase: IUseCase) => {
+export const defaultHandler = <T extends IUseCaseResponse>(
+	useCase: IUseCase<T>,
+) => {
 	return async (ctx: Context) => {
 		let requestBody: Record<string, unknown>;
 

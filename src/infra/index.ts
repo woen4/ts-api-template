@@ -3,7 +3,6 @@ import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { csrf } from "hono/csrf";
 import { secureHeaders } from "hono/secure-headers";
-
 import { routes } from "~/infra/http/routes";
 
 export const app: Hono = new Hono({}).route("/api", routes);

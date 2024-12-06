@@ -5,26 +5,29 @@ import { right } from "~/core/logic";
 import type { IUsersRepository } from "~/infra/database/repositories";
 
 const schema = z.object({
-	id: zSafeString(z.string().email()),
+	id: zSafeString(z.string()),
 });
 
-export type GetUserRequest = z.infer<typeof schema>;
+export type CreateUserRequest = z.infer<typeof schema>;
 
-export type GetUserResponse = IUseCaseResponse<{
-	name: string;
+export type CreateUserResponse = IUseCaseResponse<{
+	id: string;
 }>;
 
-export class GetUserUseCase implements IUseCase<GetUserResponse> {
+export class CreateUserUseCase implements IUseCase<CreateUserResponse> {
 	constructor(private readonly usersRepository: IUsersRepository) {}
 
 	@Validate(schema)
-	async handle(data: GetUserRequest) {
-		const _user = await this.usersRepository.findWithPosts({});
+	async handle(data: CreateUserRequest) {
+		const user = await this.usersRepository.create({
+			id: data.id,
+			name: "John Doe",
+		});
 
 		return right({
 			message: "User retrieved successfully",
 			detail: {
-				name: "John Doe",
+				id: user.id,
 			},
 		});
 	}

@@ -2,6 +2,9 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 import type { Except } from "type-fest";
 import type { {{singularize (capitalize name)}} } from "~/domain/entities";
 import type { ExtendedModel } from "~/infra/database/repositories/types";
+import type { AsyncMaybe } from "~/core/types/maybe";
+
+export type I{{pluralize (capitalize name)}}Repository = {{pluralize (capitalize name)}}Repository
 
 export class {{pluralize (capitalize name)}}Repository {
 	static usedAs = "{{pluralize (lowercase name)}}Repository";
@@ -31,13 +34,15 @@ export class {{pluralize (capitalize name)}}Repository {
 		return {{pluralize (lowercase name)}}.map({{pluralize (capitalize name)}}Repository.toDomain)
 	}
 
-	async findUnique(where: Prisma.{{singularize (capitalize name)}}WhereUniqueInput): AsyncTMaybe<{{singularize (capitalize name)}}> {
+	async findUnique(where: Prisma.{{singularize (capitalize name)}}WhereUniqueInput): AsyncMaybe<{{singularize (capitalize name)}}> {
 		const {{singularize (lowercase name)}} = await this.prisma.{{singularize (lowercase name)}}.findUnique({ where });
+
+		if (!{{singularize (lowercase name)}}) return null;
 
 		return {{pluralize (capitalize name)}}Repository.toDomain({{singularize (lowercase name)}})
 	}
 
-	static toDomain<T extends {{singularize (capitalize name)}}, K extends ExtendedModel<"{{singularize (lowercase name)}}"> | null>({{singularize (lowercase name)}}: K) {
-		return {{singularize (lowercase name)}} as unknown as K extends null ? T | null : T;
+	static toDomain<Entity extends {{singularize (capitalize name)}}>(record: ExtendedModel<"{{singularize (lowercase name)}}">) {
+		return record as Entity;
 	}
 }

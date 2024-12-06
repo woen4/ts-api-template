@@ -3,6 +3,8 @@ import type { Except } from "type-fest";
 import type { Post, User } from "~/domain/entities";
 import type { ExtendedModel } from "~/infra/database/repositories/types";
 
+export type IUsersRepository = UsersRepository;
+
 export class UsersRepository {
 	static usedAs = "usersRepository";
 
@@ -31,17 +33,17 @@ export class UsersRepository {
 		return users;
 	}
 
-	async findUnique(where: Prisma.UserWhereUniqueInput): AsyncTMaybe<User> {
+	async findUnique(where: Prisma.UserWhereUniqueInput) {
 		const user = await this.prisma.user.findUnique({ where });
 
 		if (!user) return null;
 
-		return UsersRepository.toDomain<User>(user);
+		return UsersRepository.toDomain(user);
 	}
 
 	async findWithPosts(
 		params: Except<Prisma.UserFindManyArgs, "include" | "select" | "omit">,
-	): Promise<User<Post>[]> {
+	) {
 		const users = await this.prisma.user.findMany({
 			...params,
 			include: {
@@ -52,7 +54,7 @@ export class UsersRepository {
 		return users.map(UsersRepository.toDomain<User<Post>>);
 	}
 
-	static toDomain<T extends User>(user: ExtendedModel<"user">) {
-		return user as unknown as T;
+	static toDomain<Entity extends User>(record: ExtendedModel<"user">) {
+		return record as Entity;
 	}
 }

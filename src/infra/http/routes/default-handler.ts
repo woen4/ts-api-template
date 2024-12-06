@@ -13,7 +13,11 @@ export const defaultHandler = <T extends IUseCaseResponse>(
 			if (["GET", "DELETE"].includes(ctx.req.method)) {
 				requestBody = {};
 			} else {
-				requestBody = await ctx.req.json();
+				if (ctx.req.header("Content-Type") === "application/json") {
+					requestBody = await ctx.req.json();
+				} else {
+					requestBody = await ctx.req.parseBody();
+				}
 			}
 		} catch {
 			return ctx.json({ message: "Corpo de requisição inválido" }, 400);

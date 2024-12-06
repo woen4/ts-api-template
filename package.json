@@ -8,7 +8,6 @@
     "dev": "bun --watch run src/dev.ts",
     "type:check": "tsc --noEmit",
     "prepare": "husky",
-    "commit": "cz",
     "plop": "cross-env NODE_OPTIONS='--import tsx' plop --plopfile=plopfile.ts"
   },
   "keywords": [],

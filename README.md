@@ -49,6 +49,10 @@ bun run dev
 - **prisma/**: Prisma schemas.
 - **plop/**: Code generation templates.
 
+Cada action deveria ter um handle e um exec, o handle começaria o processamento a partir dos parametros mínimos e o exec começaria a partir dos dados já calculados 
+ex: o handle recebe a string userId e o exec recebe o objeto user
+isso evita de quando outro use-case usar o método todos os dados sejam buscados novamente no banco
+
 ## Contribution
 
 1. Fork the project.

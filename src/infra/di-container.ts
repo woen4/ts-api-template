@@ -1,16 +1,19 @@
-import type { PrismaClient } from "@prisma/client";
-import type { Constructor } from "awilix";
+import type { Constructor, Resolver } from "awilix";
 import * as awilix from "awilix";
 
+import * as ErpSyncUseCase from "~/application/use-cases/erp-sync";
 import * as UsersUseCase from "~/application/use-cases/users";
 
 import { mapObject } from "~/core/logic";
 import { prismaClient } from "./database";
 import * as repositories from "./database/repositories";
+import * as providers from "./providers";
 
 type IDiContainer = {
-	prisma: PrismaClient;
-} & AsInstances<typeof UsersUseCase>;
+	prisma: typeof prismaClient;
+} & AsInstances<typeof UsersUseCase> &
+	AsInstances<typeof ErpSyncUseCase> &
+	AsInstances<typeof providers>;
 
 export const diContainer = awilix.createContainer<IDiContainer>({
 	injectionMode: "PROXY",
@@ -18,6 +21,7 @@ export const diContainer = awilix.createContainer<IDiContainer>({
 
 const useCases = {
 	...UsersUseCase,
+	...ErpSyncUseCase,
 };
 
 for (const cls of Object.values(useCases)) {
@@ -27,16 +31,32 @@ for (const cls of Object.values(useCases)) {
 	}
 }
 
+type ClassWithUsedAs = { usedAs: string };
+
+const asResolvers = (obj: object) =>
+	obj as Record<string, Resolver<unknown>>;
+
 diContainer.register({
 	prisma: awilix.asValue(prismaClient),
 
-	...mapObject(useCases, (clsName, cls) => [
-		clsName,
-		awilix.asClass(cls as Constructor<unknown>).classic(),
-	]),
+	...asResolvers(
+		mapObject(useCases, (clsName, cls) => [
+			clsName,
+			awilix.asClass(cls as Constructor<unknown>).classic(),
+		]),
+	),
 
-	...mapObject(repositories, (_clsName, cls) => [
-		cls.usedAs,
-		awilix.asClass(cls as Constructor<unknown>).classic(),
-	]),
+	...asResolvers(
+		mapObject(repositories, (_clsName, cls) => [
+			(cls as unknown as ClassWithUsedAs).usedAs,
+			awilix.asClass(cls as Constructor<unknown>).classic(),
+		]),
+	),
+
+	...asResolvers(
+		mapObject(providers, (_clsName, cls) => [
+			(cls as unknown as ClassWithUsedAs).usedAs,
+			awilix.asClass(cls as Constructor<unknown>).classic(),
+		]),
+	),
 });

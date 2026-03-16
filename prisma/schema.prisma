@@ -1,29 +1,143 @@
 generator client {
   provider        = "prisma-client-js"
   binaryTargets   = ["native", "debian-openssl-1.1.x"]
-  previewFeatures = ["prismaSchemaFolder", "omitApi", "strictUndefinedChecks"]
+  previewFeatures = ["omitApi", "strictUndefinedChecks"]
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
-model User {
-  id   String @id @default(auto()) @map("_id") @db.ObjectId
-  name String
+// -- Usuários --
 
+model User {
+  id    String @id @default(uuid())
+  name  String
   posts Post[]
 
   @@map("users")
 }
 
 model Post {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  title String
-
-  userId String @db.ObjectId
-  user User @relation(fields: [userId], references: [id])
+  id     String @id @default(uuid())
+  title  String
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
 
   @@map("posts")
+}
+
+// -- Sistema Multitenant --
+
+model Company {
+  id       String @id @default(uuid())
+  name     String
+  cnpj     String @unique
+  planTier String @map("plan_tier")
+
+  openFinanceConfigs CompanyOpenFinanceConfig[]
+  erpConfigs         CompanyErpConfig[]
+
+  @@map("companies")
+}
+
+// -- Configurações de Conectividade (Input) --
+
+model FinancialProvider {
+  id   Int    @id @default(autoincrement())
+  name String
+  type String // robotic_crawler, api_integration
+
+  companyConfigs CompanyOpenFinanceConfig[]
+
+  @@map("financial_providers")
+}
+
+model CompanyOpenFinanceConfig {
+  id                   String @id @default(uuid())
+  companyId            String @map("company_id")
+  providerId           Int    @map("provider_id")
+  encryptedCredentials String @map("encrypted_credentials")
+  status               String
+
+  company           Company           @relation(fields: [companyId], references: [id])
+  financialProvider FinancialProvider @relation(fields: [providerId], references: [id])
+
+  bankStatements   BankStatement[]
+  bankTransactions BankTransaction[]
+
+  @@map("company_open_finance_configs")
+}
+
+// -- Catálogo de Destinos (Output / ERPs) --
+
+model ErpProvider {
+  id         Int    @id @default(autoincrement())
+  name       String
+  slug       String @unique // usado para carregar o Adapter correto
+  apiVersion String @map("api_version")
+
+  companyErpConfigs CompanyErpConfig[]
+  syncLogs          ErpSyncLog[]
+
+  @@map("erp_providers")
+}
+
+model CompanyErpConfig {
+  id             String @id @default(uuid())
+  companyId      String @map("company_id")
+  erpProviderId  Int    @map("erp_provider_id")
+  externalApiKey String @map("external_api_key")
+  endpointUrl    String @map("endpoint_url")
+  settings       Json
+
+  company     Company     @relation(fields: [companyId], references: [id])
+  erpProvider ErpProvider @relation(fields: [erpProviderId], references: [id])
+
+  @@map("company_erp_configs")
+}
+
+// -- Dados Financeiros (Resultados) --
+
+model BankStatement {
+  id                   String   @id @default(uuid())
+  companyIntegrationId String   @map("company_integration_id")
+  periodDate           DateTime @map("period_date") @db.Date
+  fileUrl              String   @map("file_url")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  companyIntegration CompanyOpenFinanceConfig @relation(fields: [companyIntegrationId], references: [id])
+
+  @@map("bank_statements")
+}
+
+model BankTransaction {
+  id                   String   @id @default(uuid())
+  companyIntegrationId String   @map("company_integration_id")
+  externalId           String   @unique @map("external_id")
+  description          String
+  amount               Decimal  @db.Decimal(15, 2)
+  date                 DateTime @db.Date
+  rawJson              Json     @map("raw_json")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  companyIntegration CompanyOpenFinanceConfig @relation(fields: [companyIntegrationId], references: [id])
+
+  @@map("bank_transactions")
+}
+
+// -- Pivot de Sincronização Agnóstica (A ponte para os ERPs) --
+
+model ErpSyncLog {
+  id            String    @id @default(uuid())
+  erpProviderId Int       @map("erp_provider_id")
+  referenceId   String    @map("reference_id")   // Referência polimórfica (statement ou transaction)
+  referenceType String    @map("reference_type") // "statement" | "transaction"
+  syncStatus    String    @map("sync_status")    // pending, success, error
+  erpResponse   String?   @map("erp_response")
+  syncedAt      DateTime? @map("synced_at")
+
+  erpProvider ErpProvider @relation(fields: [erpProviderId], references: [id])
+
+  @@map("erp_sync_logs")
 }

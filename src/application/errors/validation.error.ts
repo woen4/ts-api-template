@@ -8,6 +8,6 @@ export class ValidationError implements DomainError {
 
 	constructor(errorPayload: ZodError | string) {
 		this.detail =
-			typeof errorPayload === "string" ? errorPayload : errorPayload.errors;
+			typeof errorPayload === "string" ? errorPayload : errorPayload.issues;
 	}
 }

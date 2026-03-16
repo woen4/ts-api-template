@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bm3
+      POSTGRES_PASSWORD: bm3
+      POSTGRES_DB: bm3
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bm3 -d bm3"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    ports:
+      - "3333:3333"
+    environment:
+      DATABASE_URL: postgresql://bm3:bm3@postgres:5432/bm3
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "bunx prisma migrate deploy && bun src/dev.ts"
+
+volumes:
+  postgres_data:

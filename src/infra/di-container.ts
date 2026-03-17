@@ -3,8 +3,8 @@ import * as awilix from "awilix";
 
 import * as ErpSyncUseCase from "~/application/use-cases/erp-sync";
 import * as UsersUseCase from "~/application/use-cases/users";
-
 import { mapObject } from "~/core/logic";
+import type { AsInstances } from "~/core/types/as-instances";
 import { prismaClient } from "./database";
 import * as repositories from "./database/repositories";
 
@@ -31,8 +31,7 @@ for (const cls of Object.values(useCases)) {
 
 type ClassWithUsedAs = { usedAs: string };
 
-const asResolvers = (obj: object) =>
-	obj as Record<string, Resolver<unknown>>;
+const asResolvers = (obj: object) => obj as Record<string, Resolver<unknown>>;
 
 diContainer.register({
 	prisma: awilix.asValue(prismaClient),
@@ -50,5 +49,4 @@ diContainer.register({
 			awilix.asClass(cls as Constructor<unknown>).classic(),
 		]),
 	),
-
 });

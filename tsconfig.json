@@ -1,45 +1,38 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "moduleResolution": "Node",
-    "module": "ESNext",
-    "lib": [
-      "ESNext",
-      "ESNext.AsyncIterable",
-    ],
-    "outDir": "build",
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "noImplicitThis": true,
-    "resolveJsonModule": true,
-    "alwaysStrict": true,
-    "removeComments": true,
-    "noImplicitReturns": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "skipLibCheck": true,
-    "rootDir": "./",
-    "baseUrl": ".",
-    "paths": {
-      "~/*": [
-        "./src/*"
-      ]
-    },
-    // This config is for other projects import types from this project
-    "composite": true,
-  },
-  "include": [
-    "./src/**/*.ts"
-  ],
-  "exclude": [
-    "./node_modules/*",
-    "./src/**/*.spec.ts",
-    "./tests/**",
-    "index.d.ts"
-  ],
+	"compilerOptions": {
+		"target": "ESNext",
+		"moduleResolution": "Node",
+		"module": "ESNext",
+		"lib": ["ESNext", "ESNext.AsyncIterable"],
+		"outDir": "build",
+		"strict": true,
+		"forceConsistentCasingInFileNames": true,
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"noImplicitThis": true,
+		"resolveJsonModule": true,
+		"alwaysStrict": true,
+		"removeComments": true,
+		"noImplicitReturns": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"skipLibCheck": true,
+		"rootDir": "./",
+		"baseUrl": ".",
+		"paths": {
+			"~/*": ["./src/*"]
+		},
+		// This config is for other projects import types from this project
+		"composite": true
+	},
+	"include": ["./src/**/*.ts"],
+	"exclude": [
+		"./node_modules/*",
+		"./src/**/*.spec.ts",
+		"./tests/**",
+		"index.d.ts"
+	]
 }

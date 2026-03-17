@@ -38,11 +38,10 @@ export class SyncTransactionToContaAzulUseCase
 
 	@Validate(schema)
 	async handle(data: SyncTransactionToContaAzulRequest) {
-		const config =
-			await this.companyErpConfigsRepository.findByCompanyAndSlug(
-				data.companyId,
-				"contazul",
-			);
+		const config = await this.companyErpConfigsRepository.findByCompanyAndSlug(
+			data.companyId,
+			"contazul",
+		);
 
 		if (!config) {
 			return left(

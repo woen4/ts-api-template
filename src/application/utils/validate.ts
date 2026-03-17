@@ -4,13 +4,13 @@ import { left } from "~/core/logic";
 
 export function Validate<T extends z.ZodTypeAny>(schema: T) {
 	return (
-		// biome-ignore lint/complexity/noBannedTypes: <explanation>
+		// biome-ignore lint/complexity/noBannedTypes: required for type flexibility
 		_target: Object,
 		_propertyKey: string | symbol,
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		// biome-ignore lint/suspicious/noExplicitAny: required for type flexibility
 		descriptor: TypedPropertyDescriptor<(data: z.infer<T>) => any>,
 	) => {
-		// biome-ignore lint/style/noNonNullAssertion: <explanation>
+		// biome-ignore lint/style/noNonNullAssertion: required for type flexibility
 		const originalMethod = descriptor.value!;
 		descriptor.value = function (data: z.infer<T>) {
 			const payload = schema.safeParse(data);

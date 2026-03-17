@@ -22,9 +22,7 @@ export class CompanyErpConfigsRepository {
 		return CompanyErpConfigsRepository.toDomain(record);
 	}
 
-	static toDomain(
-		record: ExtendedModel<"companyErpConfig">,
-	): CompanyErpConfig {
+	static toDomain(record: ExtendedModel<"companyErpConfig">): CompanyErpConfig {
 		return {
 			...record,
 			settings: record.settings as Record<string, unknown>,

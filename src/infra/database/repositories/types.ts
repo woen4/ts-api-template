@@ -4,7 +4,7 @@ import type { EmptyObject } from "type-fest";
 /** All prisma model names. */
 export type ModelName = keyof {
 	[Model in keyof PrismaClient as PrismaClient[Model] extends {
-		// biome-ignore lint/complexity/noBannedTypes: <explanation>
+		// biome-ignore lint/complexity/noBannedTypes: required for type flexibility
 		findFirstOrThrow: Function;
 	}
 		? Model
@@ -12,13 +12,14 @@ export type ModelName = keyof {
 };
 
 /** For a given model, extract all the available "include" properties and set them all to `true`. */
-export type IncludeAll<Model extends ModelName> = NonNullable<
-	NonNullable<Parameters<PrismaClient[Model]["findFirstOrThrow"]>[0]>
-> extends {
-	include?: infer IncludeArg;
-}
-	? Record<Exclude<keyof NonNullable<IncludeArg>, "_count">, true>
-	: EmptyObject;
+export type IncludeAll<Model extends ModelName> =
+	NonNullable<
+		NonNullable<Parameters<PrismaClient[Model]["findFirstOrThrow"]>[0]>
+	> extends {
+		include?: infer IncludeArg;
+	}
+		? Record<Exclude<keyof NonNullable<IncludeArg>, "_count">, true>
+		: EmptyObject;
 
 export type BaseModel<Model extends ModelName> = NonNullable<
 	Awaited<ReturnType<PrismaClient[Model]["findFirstOrThrow"]>>

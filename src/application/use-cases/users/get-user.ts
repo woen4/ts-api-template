@@ -1,7 +1,7 @@
 import { z } from "zod";
+import { GenericError } from "~/application/errors/generic.error";
 import type { IUseCase, IUseCaseResponse } from "~/application/types";
 import { Validate, zSafeString } from "~/application/utils";
-import { GenericError } from "~/application/errors/generic.error";
 import { left, right } from "~/core/logic";
 import type { IUsersRepository } from "~/infra/database/repositories";
 
@@ -23,9 +23,7 @@ export class GetUserUseCase implements IUseCase<GetUserResponse> {
 		const user = await this.usersRepository.findUnique({ id: data.id });
 
 		if (!user) {
-			return left(
-				new GenericError({ message: "User not found" }),
-			);
+			return left(new GenericError({ message: "User not found" }));
 		}
 
 		return right({

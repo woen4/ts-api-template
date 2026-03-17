@@ -1,6 +1,6 @@
 export type Nullable = undefined | null | false;
 
 export type ConditionalAddition<Condition, Prop> = Condition extends Nullable
-	? // biome-ignore lint/complexity/noBannedTypes: <explanation>
+	? // biome-ignore lint/complexity/noBannedTypes: required for type flexibility
 		{}
 	: Prop;

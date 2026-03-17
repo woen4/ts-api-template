@@ -1,6 +1,6 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import type { Except } from "type-fest";
-import type { Post, User } from "~/domain/entities";
+import type { User } from "~/domain/entities";
 import type { ExtendedModel } from "~/infra/database/repositories/types";
 
 export type IUsersRepository = UsersRepository;
@@ -39,19 +39,6 @@ export class UsersRepository {
 		if (!user) return null;
 
 		return UsersRepository.toDomain(user);
-	}
-
-	async findWithPosts(
-		params: Except<Prisma.UserFindManyArgs, "include" | "select" | "omit">,
-	) {
-		const users = await this.prisma.user.findMany({
-			...params,
-			include: {
-				posts: true,
-			},
-		});
-
-		return users.map(UsersRepository.toDomain<User<Post>>);
 	}
 
 	static toDomain<Entity extends User>(record: ExtendedModel<"user">) {

@@ -1,6 +1,6 @@
 export type BankTransaction = {
 	id: string;
-	companyIntegrationId: string;
+	companyId: string;
 	externalId: string;
 	description: string;
 	amount: number;

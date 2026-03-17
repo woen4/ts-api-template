@@ -11,7 +11,7 @@ const schema = z.object({
 	companyId: zSafeString(z.string().uuid()),
 	transaction: z.object({
 		id: z.string().uuid(),
-		companyIntegrationId: z.string().uuid(),
+		companyId: z.string().uuid(),
 		externalId: z.string(),
 		description: z.string(),
 		amount: z.number(),

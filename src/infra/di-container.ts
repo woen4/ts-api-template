@@ -7,13 +7,11 @@ import * as UsersUseCase from "~/application/use-cases/users";
 import { mapObject } from "~/core/logic";
 import { prismaClient } from "./database";
 import * as repositories from "./database/repositories";
-import * as providers from "./providers";
 
 type IDiContainer = {
 	prisma: typeof prismaClient;
 } & AsInstances<typeof UsersUseCase> &
-	AsInstances<typeof ErpSyncUseCase> &
-	AsInstances<typeof providers>;
+	AsInstances<typeof ErpSyncUseCase>;
 
 export const diContainer = awilix.createContainer<IDiContainer>({
 	injectionMode: "PROXY",
@@ -53,10 +51,4 @@ diContainer.register({
 		]),
 	),
 
-	...asResolvers(
-		mapObject(providers, (_clsName, cls) => [
-			(cls as unknown as ClassWithUsedAs).usedAs,
-			awilix.asClass(cls as Constructor<unknown>).classic(),
-		]),
-	),
 });

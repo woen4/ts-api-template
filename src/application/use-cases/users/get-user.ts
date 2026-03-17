@@ -1,7 +1,8 @@
 import { z } from "zod";
 import type { IUseCase, IUseCaseResponse } from "~/application/types";
 import { Validate, zSafeString } from "~/application/utils";
-import { right } from "~/core/logic";
+import { GenericError } from "~/application/errors/generic.error";
+import { left, right } from "~/core/logic";
 import type { IUsersRepository } from "~/infra/database/repositories";
 
 const schema = z.object({
@@ -19,12 +20,18 @@ export class GetUserUseCase implements IUseCase<GetUserResponse> {
 
 	@Validate(schema)
 	async handle(data: GetUserRequest) {
-		const _user = await this.usersRepository.findWithPosts({});
+		const user = await this.usersRepository.findUnique({ id: data.id });
+
+		if (!user) {
+			return left(
+				new GenericError({ message: "User not found" }),
+			);
+		}
 
 		return right({
 			message: "User retrieved successfully",
 			detail: {
-				name: "John Doe",
+				name: user.name,
 			},
 		});
 	}

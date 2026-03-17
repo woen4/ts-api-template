@@ -1,4 +1,12 @@
 -- CreateTable
+CREATE TABLE "users" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "companies" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -6,26 +14,6 @@ CREATE TABLE "companies" (
     "plan_tier" TEXT NOT NULL,
 
     CONSTRAINT "companies_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "financial_providers" (
-    "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
-
-    CONSTRAINT "financial_providers_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "company_open_finance_configs" (
-    "id" TEXT NOT NULL,
-    "company_id" TEXT NOT NULL,
-    "provider_id" INTEGER NOT NULL,
-    "encrypted_credentials" TEXT NOT NULL,
-    "status" TEXT NOT NULL,
-
-    CONSTRAINT "company_open_finance_configs_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -51,20 +39,9 @@ CREATE TABLE "company_erp_configs" (
 );
 
 -- CreateTable
-CREATE TABLE "bank_statements" (
-    "id" TEXT NOT NULL,
-    "company_integration_id" TEXT NOT NULL,
-    "period_date" DATE NOT NULL,
-    "file_url" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "bank_statements_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "bank_transactions" (
     "id" TEXT NOT NULL,
-    "company_integration_id" TEXT NOT NULL,
+    "company_id" TEXT NOT NULL,
     "external_id" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "amount" DECIMAL(15,2) NOT NULL,
@@ -98,22 +75,13 @@ CREATE UNIQUE INDEX "erp_providers_slug_key" ON "erp_providers"("slug");
 CREATE UNIQUE INDEX "bank_transactions_external_id_key" ON "bank_transactions"("external_id");
 
 -- AddForeignKey
-ALTER TABLE "company_open_finance_configs" ADD CONSTRAINT "company_open_finance_configs_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "company_open_finance_configs" ADD CONSTRAINT "company_open_finance_configs_provider_id_fkey" FOREIGN KEY ("provider_id") REFERENCES "financial_providers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "company_erp_configs" ADD CONSTRAINT "company_erp_configs_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "company_erp_configs" ADD CONSTRAINT "company_erp_configs_erp_provider_id_fkey" FOREIGN KEY ("erp_provider_id") REFERENCES "erp_providers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "bank_statements" ADD CONSTRAINT "bank_statements_company_integration_id_fkey" FOREIGN KEY ("company_integration_id") REFERENCES "company_open_finance_configs"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "bank_transactions" ADD CONSTRAINT "bank_transactions_company_integration_id_fkey" FOREIGN KEY ("company_integration_id") REFERENCES "company_open_finance_configs"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "bank_transactions" ADD CONSTRAINT "bank_transactions_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "erp_sync_logs" ADD CONSTRAINT "erp_sync_logs_erp_provider_id_fkey" FOREIGN KEY ("erp_provider_id") REFERENCES "erp_providers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

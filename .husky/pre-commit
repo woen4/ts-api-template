@@ -1,14 +1,13 @@
 #!/bin/sh
 echo "🔎 Checking types..."
-bun run type:check
+tsc --noEmit
 echo "✅ Types are ok"
 
-echo "\n"
+echo ""
 
 echo "🔎 Linting files..."
-
-if echo "$(bun run lint 2>&1)" | grep -q 'src/'; then
-  bun run lint
+if biome check src/ 2>&1 | grep -q 'src/'; then
+  biome check src/
   exit 1
 else
   echo "✅ Linting is ok"

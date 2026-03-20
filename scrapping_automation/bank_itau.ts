@@ -4,148 +4,132 @@ import { BrowserService } from "./core/initialize-browserbase";
 import { handleDownload } from "./utils/handle-downloads";
 
 const PAGE = 'https://www.itau.com.br/empresas';
-const OPERATOR_CODE = '';
-const PASSWORD = '';
+const OPERATOR_CODE = process.env.ITAU_OPERATOR_CODE;
+const PASSWORD = process.env.ITAU_PASSWORD;
+const SUBMIT_BTN = '#idl-more-access-submit-button';
 
 async function main() {
-	const { browser, page, sessionId } = await BrowserService.getInstance().createSession();
+	const { browser, page } = await BrowserService.getInstance().createSession(false);
+
+	page.on('response', response => {
+		if (response.url().includes('router') && response.status() >= 400) {
+			console.warn(`[MONITOR] Status ${response.status()} on security router.`);
+		}
+	});
 
 	try {
-		console.log(`🚀 Iniciando automação Itaú na sessão: ${sessionId}`);
+		console.log("🚀 Iniciando automação Itaú");
 
-		page.on('response', response => {
-			if (response.url().includes('router') && response.status() >= 400) {
-				console.error(`⚠️ Bloqueio detectado no Roteador: ${response.status()} - ${response.url()}`);
-			}
-		});
+		await navigateToPageAndCloseOverlays(page);
+		await initialFormAccess(page);
 
-		await page.goto(PAGE, { waitUntil: 'domcontentloaded' });
+		console.log("👀 Aguardando redirecionamento e carregamento do teclado...");
+
+		await Promise.all([
+			page.waitForURL('**/router-app/router**', { waitUntil: 'domcontentloaded', timeout: 60000 }),
+			page.click(SUBMIT_BTN)
+		]);
+
+		await page.waitForLoadState('load');
+		await page.waitForSelector('a#campoTeclado', { state: 'visible', timeout: 60000 });
+		await page.waitForTimeout(2000);
 
 		await clearOverlays(page);
-
-		const INITIAL_BTN = '#open_modal_more_access';
-		await page.waitForSelector(INITIAL_BTN);
-		await page.click(INITIAL_BTN);
-
-		const LOGIN_TYPE_SELECT = '#idl-more-access-select-login';
-		await page.waitForSelector(LOGIN_TYPE_SELECT);
-		await page.selectOption(LOGIN_TYPE_SELECT, 'operator');
-
-		const OPERATOR_INPUT = '#idl-more-access-input-operator';
-		await page.waitForSelector(OPERATOR_INPUT);
-		await page.click(OPERATOR_INPUT);
-		await page.type(OPERATOR_INPUT, OPERATOR_CODE, { delay: 100 });
-
-		await page.keyboard.press('Tab');
-		await page.waitForTimeout(500);
-		await page.keyboard.press('Enter');
-
-		const SUBMIT_BTN = '#idl-more-access-submit-button';
-
-		await page.waitForFunction((selector: string) => {
-			const btn = document.querySelector(selector) as HTMLButtonElement | null;
-			return !!btn && !btn.disabled && btn.getAttribute('aria-disabled') !== 'true';
-		}, SUBMIT_BTN);
-
-		try {
-			console.log("👀 Aguardando redirecionamento e carregamento do teclado...");
-
-			await Promise.all([
-				page.waitForURL('**/router-app/router**', {
-					waitUntil: 'domcontentloaded',
-					timeout: 60000
-				}),
-
-				page.click(SUBMIT_BTN)
-			]);
-
-			await page.waitForLoadState('load');
-
-			await page.waitForSelector('a#campoTeclado', { state: 'visible', timeout: 60000 });
-
-			try {
-				await page.waitForLoadState('networkidle', { timeout: 10000 });
-			} catch (e) {
-				console.log("⚠️ Network não ficou ociosa, mas seguindo após timeout de segurança...");
-			}
-
-			await page.waitForTimeout(2000);
-
-			await clearOverlays(page);
-
-			await preencherSenha(page, PASSWORD);
-
-			await page.click('#acessar');
-
-			// Last step: access type
-			console.log("⏳ Aguardando tela de seleção de tipo de acesso...");
-			await page.waitForSelector('#rdBasico', { state: 'visible', timeout: 30000 });
-
-			console.log("🔘 Selecionando Acesso Básico...");
-			await page.click('label[for="rdBasico"]');
-
-			const BTN_CONTINUAR_FINAL = '#btn-continuar';
-
-			console.log("⏳ Aguardando liberação do botão Continuar...");
-			await page.waitForSelector(BTN_CONTINUAR_FINAL, { state: 'visible', timeout: 15000 });
-
-			await page.click(BTN_CONTINUAR_FINAL);
-			console.log("🚀 Redirecionando para o Dashboard... Login concluído com sucesso!");
-
-			try {
-				await page.waitForLoadState(
-					'networkidle',
-					{ timeout: 60000 }
-				);
-
-				console.log("✅ DASHBOARD CARREGADO!");
-			} catch (e) {
-				console.log("⚠️ Navegação demorada, mas o comando foi enviado.");
-			}
-
-			await navigateToExtractsPage(page);
-
-			await page.waitForTimeout(4000);
-
-			await fecharModalCoachmark(page);
-
-			await capturarExtratoPDF(page);
-		} catch (e) {
-			console.error("❌ O roteador não respondeu a tempo. Possível bloqueio de segurança.");
-			await page.screenshot({ path: `downloads/fail_router_${Date.now()}.png` });
-			throw e;
-		}
-
-		const keepAlive = setInterval(async () => {
-			try {
-				await page.evaluate(() => document.title);
-			} catch {
-				clearInterval(keepAlive);
-			}
-		}, 15000);
-
-		await new Promise<void>((resolve) => {
-			browser.on('disconnected', () => {
-				clearInterval(keepAlive);
-				resolve();
-			});
-		});
-
+		await fillPassword(page, PASSWORD);
+		await logWithAccessType(page);
+		await navigateToExtractsPage(page);
+		await closeOverlayModals(page);
+		await capturarExtratoPDF(page);
 	} catch (error) {
-		console.error(`❌ Falha na automação do Itaú:`, error);
+		console.error(`❌ Falha na automação:`, error.message);
+
+		const screenshotPath = `downloads/fail_${Date.now()}.png`;
+		await page.screenshot({ path: screenshotPath });
+
+		console.log(`📸 Screenshot do erro salva em: ${screenshotPath}`);
+	} finally {
+		if (browser) {
+			await browser.close();
+			console.log("🧹 Processo de automação concluído!");
+		}
 	}
 }
 
 async function navigateToExtractsPage(page: any) {
-	await page.click('button:has-text("Conta corrente")');
+	const BUTTON_REFERENCE = "button:has-text(\"Conta corrente\")";
 
-	const extratoDetalhadoBtn = page.getByRole('menuitem', { name: /Extrato Detalhado/i });
-	await extratoDetalhadoBtn.waitFor({ state: 'visible', timeout: 10000 });
-	await extratoDetalhadoBtn.click();
+	console.log("⏳ Aguardando carregamento do Dashboard para navegar...");
+
+	await page.waitForSelector(BUTTON_REFERENCE, { state: 'visible', timeout: 30000 });
+	await page.waitForTimeout(1000);
+
+	console.log("🖱️ Abrindo menu 'Conta corrente'...");
+
+	await page.click(BUTTON_REFERENCE, { force: true });
+
+	const expectedButtonElement = page.getByRole('menuitem', { name: /Extrato Detalhado/i });
+
+	try {
+		await expectedButtonElement.waitFor({ state: 'visible', timeout: 10000 });
+		await expectedButtonElement.click();
+
+		console.log("📂 Navegando para Extrato Detalhado...");
+	} catch (e) {
+		console.log("⚠️ Menu não apareceu, tentando clique de redundância...");
+
+		await page.click(BUTTON_REFERENCE, { force: true });
+		await expectedButtonElement.click();
+	}
 }
 
-async function preencherSenha(page: any, senha: string) {
-	const digitos = senha.split('');
+async function logWithAccessType(page: any) {
+	await page.click('#acessar');
+
+	await page.waitForSelector('#rdBasico', { state: 'visible', timeout: 30000 });
+
+	await page.click('label[for="rdBasico"]');
+
+	const BTN_CONTINUE = '#btn-continuar';
+
+	await page.waitForSelector(BTN_CONTINUE, { state: 'visible', timeout: 15000 });
+
+	await page.click(BTN_CONTINUE);
+}
+
+async function navigateToPageAndCloseOverlays(page: any) {
+	await page.goto(PAGE, { waitUntil: 'domcontentloaded' });
+
+	await clearOverlays(page);
+}
+
+async function initialFormAccess(page: any) {
+	const INITIAL_BTN = '#open_modal_more_access';
+	await page.waitForSelector(INITIAL_BTN);
+	await page.click(INITIAL_BTN);
+
+	const LOGIN_TYPE_SELECT = '#idl-more-access-select-login';
+	await page.waitForSelector(LOGIN_TYPE_SELECT);
+	await page.selectOption(LOGIN_TYPE_SELECT, 'operator');
+
+	const OPERATOR_INPUT = '#idl-more-access-input-operator';
+	await page.waitForSelector(OPERATOR_INPUT);
+	await page.click(OPERATOR_INPUT);
+	await page.type(OPERATOR_INPUT, OPERATOR_CODE, { delay: 100 });
+
+	await page.keyboard.press('Tab');
+	await page.waitForTimeout(500);
+	await page.keyboard.press('Enter');
+
+	await page.waitForFunction((selector: string) => {
+		const btn = document.querySelector(selector) as HTMLButtonElement | null;
+		return !!btn && !btn.disabled && btn.getAttribute('aria-disabled') !== 'true';
+	}, SUBMIT_BTN);
+}
+
+async function fillPassword(page: any, password: string) {
+	await page.waitForTimeout(6000);
+
+	const digitos = password.split('');
 
 	for (const [index, digito] of digitos.entries()) {
 		const botao = page.locator('a#campoTeclado', {
@@ -210,8 +194,10 @@ async function findInAllContexts(page: any, selector: string): Promise<any | nul
 	return null;
 }
 
-async function fecharModalCoachmark(page: any) {
+async function closeOverlayModals(page: any) {
 	console.log("🔍 Verificando se há modal de coachmark...");
+
+	await page.waitForTimeout(4000);
 
 	try {
 		const MODAL_SELECTOR = '.cdk-overlay-container .voxel-modal__content';

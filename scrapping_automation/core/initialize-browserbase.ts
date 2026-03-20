@@ -1,5 +1,4 @@
-import {chromium, BrowserContext, devices, BrowserContextOptions, Browser} from "playwright";
-import { browserbaseConfig } from "../config/browserbase";
+import {chromium, BrowserContext, devices, Browser} from "playwright";
 
 interface BrowserbaseSession extends Browser {
 	sessionId: string;
@@ -20,43 +19,55 @@ export class BrowserService {
 		return BrowserService.instance;
 	}
 
-	async createSession()
+	async createSession(useBrowserbase = true)
 	{
-		// const browser = await chromium.connectOverCDP(
-		// 	`wss://connect.browserbase.com?apiKey=${browserbaseConfig.apiKey}&projectId=${browserbaseConfig.projectId}`
-		// ) as BrowserbaseSession;
+		let browser, context, sessionId = 'local-session';
 
-		const browser = await chromium.launch({
-			headless: false, // O Warsaw às vezes exige que o browser seja visível (Janela aberta)
-			executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-		}) as BrowserbaseSession;
+		if (useBrowserbase) {
+			browser = await chromium.connectOverCDP(
+				`wss://connect.browserbase.com?apiKey=${browserbaseConfig.apiKey}&projectId=${browserbaseConfig.projectId}`
+			) as BrowserbaseSession;
 
-		const iPad = devices['Desktop Chrome']; // iPad Pro 11, iPhone 13
+			sessionId = browser.sessionId;
 
-		const { defaultBrowserType, ...deviceOptions } = iPad;
+			console.log(`🚀 SESSION STARTED AT: https://www.browserbase.com/sessions/${sessionId}`);
 
-		const contextOptions: BrowserContextOptions = {
-			...deviceOptions,
-			userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-			viewport: { width: 1920, height: 1080 },
-			locale: 'pt-BR',
-			timezoneId: 'America/Sao_Paulo',
-		};
+			const desktopDevice = devices['Desktop Chrome'];
 
-		const context = await browser.newContext(contextOptions);
+			const { defaultBrowserType, ...deviceOptions } = desktopDevice;
 
-		await this.applyStealth(context);
+			const contextOptions: BrowserContextOptions = {
+				...deviceOptions,
+				userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+				viewport: { width: 1920, height: 1080 },
+				locale: 'pt-BR',
+				timezoneId: 'America/Sao_Paulo',
+			};
+
+			context = await browser.newContext(contextOptions);
+
+			await this.applyStealth(context);
+		} else {
+			browser = await chromium.launch({
+				headless: false,
+				executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+			}) as BrowserbaseSession;
+
+			console.log(`🚀 LOCAL SESSION STARTED ON WINDOWS SERVER`);
+
+			context = await browser.newContext({
+				viewport: { width: 1920, height: 1080 }
+			});
+		}
 
 		const page = await context.newPage();
 
-		const sessionId = browser.sessionId || 'LOCAL_SESSION';
-		console.log(`🚀 SESSION STARTED AT: https://www.browserbase.com/sessions/${sessionId}`);
-
-		browser.on('disconnected', () => {
-			console.error('⚠️ Browser desconectado — sessão possivelmente expirada ou conexão perdida.');
-		});
-
-		return { browser, context, page, sessionId };
+		return {
+			browser,
+			context,
+			page,
+			sessionId,
+		};
 	}
 
 	private async applyStealth(context: BrowserContext) {
@@ -67,7 +78,6 @@ export class BrowserService {
 			window.chrome = {
 				runtime: {},
 				loadTimes: Date.now,
-				csiex: function() {},
 				app: {}
 			};
 

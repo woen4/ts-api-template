@@ -18,3 +18,5 @@ credentials.json
 index.d.ts
 index.tsbuildinfo
 .idea
+
+/downloads

@@ -1,9 +1,15 @@
 import { type DomainError, ErrorCodes } from "~/application/types/domain-error";
 
-export class DuplicatedEntityError implements DomainError {
+type DuplicatedEntityErrorDetail = {
+	message: string;
+};
+
+export class DuplicatedEntityError
+	implements DomainError<DuplicatedEntityErrorDetail>
+{
 	error = "DuplicatedEntity Error";
 	code = ErrorCodes.DUPLICATED_ENTITY_ERROR;
-	detail: unknown;
+	detail: DuplicatedEntityErrorDetail;
 
 	constructor(message: string) {
 		this.detail = { message };

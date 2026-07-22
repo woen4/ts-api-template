@@ -3,22 +3,29 @@ import { ValidationError } from "~/application/errors/validation.error";
 import { left } from "~/core/logic";
 
 export function Validate<T extends z.ZodTypeAny>(schema: T) {
-	return (
-		// biome-ignore lint/complexity/noBannedTypes: <explanation>
-		_target: Object,
+	return <TRest extends unknown[], TReturn>(
+		_target: object,
 		_propertyKey: string | symbol,
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		descriptor: TypedPropertyDescriptor<(data: z.infer<T>) => any>,
+		descriptor: TypedPropertyDescriptor<
+			(data: z.infer<T>, ...rest: TRest) => TReturn
+		>,
 	) => {
-		// biome-ignore lint/style/noNonNullAssertion: <explanation>
-		const originalMethod = descriptor.value!;
-		descriptor.value = function (data: z.infer<T>) {
+		const originalMethod = descriptor.value;
+		if (!originalMethod) {
+			return descriptor;
+		}
+
+		descriptor.value = function (
+			this: unknown,
+			data: z.infer<T>,
+			...rest: TRest
+		) {
 			const payload = schema.safeParse(data);
 			if (!payload.success) {
-				return left(new ValidationError(payload.error));
+				return left(new ValidationError(payload.error)) as TReturn;
 			}
-			return originalMethod.apply(this, [payload.data]);
-		};
+			return originalMethod.apply(this, [payload.data, ...rest]);
+		} as (data: z.infer<T>, ...rest: TRest) => TReturn;
 		return descriptor;
 	};
 }

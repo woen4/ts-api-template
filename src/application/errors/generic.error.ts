@@ -1,11 +1,18 @@
 import { type DomainError, ErrorCodes } from "~/application/types/domain-error";
 
-export class GenericError implements DomainError {
+export type GenericErrorDetail =
+	| string
+	| number
+	| boolean
+	| null
+	| Record<string, string | number | boolean | null>;
+
+export class GenericError implements DomainError<GenericErrorDetail> {
 	error = "Generic Error";
 	code = ErrorCodes.GENERIC_ERROR;
-	detail: unknown;
+	detail: GenericErrorDetail;
 
-	constructor(detail: unknown) {
+	constructor(detail: GenericErrorDetail) {
 		this.detail = detail;
 	}
 }

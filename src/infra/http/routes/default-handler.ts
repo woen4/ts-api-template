@@ -1,10 +1,17 @@
 import type { Context } from "hono";
 
-import type { IUseCase, IUseCaseResponse } from "~/application/types/use-case";
+import {
+	type IUseCase,
+	type IUseCaseResponse,
+	toRequestContext,
+} from "~/application/types";
 import { StatusErrorCodeMapper } from "./status-error-code-mapper";
 
-export const defaultHandler = <T extends IUseCaseResponse>(
-	useCase: IUseCase<T>,
+export const defaultHandler = <
+	TInput extends Record<string, unknown>,
+	TResponse extends IUseCaseResponse,
+>(
+	useCase: IUseCase<TInput, TResponse>,
 ) => {
 	return async (ctx: Context) => {
 		let requestBody: Record<string, unknown>;
@@ -30,8 +37,8 @@ export const defaultHandler = <T extends IUseCaseResponse>(
 		};
 
 		const response = await useCase.handle(
-			requestPayload,
-			ctx.get("jwtPayload"),
+			requestPayload as TInput,
+			toRequestContext(ctx.get("jwtPayload")),
 		);
 
 		if (response.isLeft())

@@ -1,16 +1,15 @@
 import type { DomainError } from "~/application/types/domain-error";
+import type { RequestContext } from "~/application/types/request-context";
 import type { AsyncEither } from "~/core/logic";
 
 export type IUseCaseResponse<T = void> = {
 	message: string;
 	redirectTo?: string;
-	// biome-ignore lint/complexity/noBannedTypes: <explanation>
-} & (T extends Record<string, unknown> ? { detail: T } : {});
+} & (T extends Record<string, unknown> ? { detail: T } : Record<never, never>);
 
-export interface IUseCase<IUseCaseResponse> {
+export interface IUseCase<TInput, TResponse> {
 	handle: (
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		payload?: any,
-		auth?: unknown,
-	) => AsyncEither<DomainError, IUseCaseResponse>;
+		payload: TInput,
+		ctx: RequestContext,
+	) => AsyncEither<DomainError, TResponse>;
 }

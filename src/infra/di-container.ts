@@ -5,8 +5,10 @@ import * as awilix from "awilix";
 import * as UsersUseCase from "~/application/use-cases/users";
 
 import { mapObject } from "~/core/logic";
+import type { AsInstances } from "~/core/types/as-instances";
 import { prismaClient } from "./database";
 import * as repositories from "./database/repositories";
+import * as providers from "./providers/mail-provider";
 
 type IDiContainer = {
 	prisma: PrismaClient;
@@ -36,6 +38,11 @@ diContainer.register({
 	]),
 
 	...mapObject(repositories, (_clsName, cls) => [
+		cls.usedAs,
+		awilix.asClass(cls as Constructor<unknown>).classic(),
+	]),
+
+	...mapObject(providers, (_clsName, cls) => [
 		cls.usedAs,
 		awilix.asClass(cls as Constructor<unknown>).classic(),
 	]),

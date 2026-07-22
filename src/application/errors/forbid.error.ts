@@ -1,9 +1,13 @@
 import { type DomainError, ErrorCodes } from "~/application/types/domain-error";
 
-export class ForbidError implements DomainError {
+type ForbidErrorDetail = {
+	message: string;
+};
+
+export class ForbidError implements DomainError<ForbidErrorDetail> {
 	error = "Forbid Error";
 	code = ErrorCodes.FORBID_ERROR;
-	detail: unknown;
+	detail: ForbidErrorDetail;
 
 	constructor(message: string) {
 		this.detail = { message: message ?? "Forbid action" };

@@ -1,6 +1,7 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import type { Except } from "type-fest";
 import type { Post, User } from "~/domain/entities";
+import { toPostId, toUserId } from "~/domain/ids";
 import type { ExtendedModel } from "~/infra/database/repositories/types";
 
 export type IUsersRepository = UsersRepository;
@@ -11,7 +12,9 @@ export class UsersRepository {
 	constructor(private readonly prisma: PrismaClient) {}
 
 	create(data: User) {
-		return this.prisma.user.create({ data });
+		return this.prisma.user
+			.create({ data })
+			.then((user) => UsersRepository.toDomain(user));
 	}
 
 	update(params: {
@@ -30,7 +33,7 @@ export class UsersRepository {
 	): Promise<User[]> {
 		const users = await this.prisma.user.findMany(params);
 
-		return users;
+		return users.map((user) => UsersRepository.toDomain(user));
 	}
 
 	async findUnique(where: Prisma.UserWhereUniqueInput) {
@@ -43,7 +46,7 @@ export class UsersRepository {
 
 	async findWithPosts(
 		params: Except<Prisma.UserFindManyArgs, "include" | "select" | "omit">,
-	) {
+	): Promise<User<Post>[]> {
 		const users = await this.prisma.user.findMany({
 			...params,
 			include: {
@@ -51,10 +54,26 @@ export class UsersRepository {
 			},
 		});
 
-		return users.map(UsersRepository.toDomain<User<Post>>);
+		return users.map((user) => UsersRepository.toDomainWithPosts(user));
 	}
 
-	static toDomain<Entity extends User>(record: ExtendedModel<"user">) {
-		return record as Entity;
+	static toDomain(record: ExtendedModel<"user">): User {
+		return {
+			...record,
+			id: toUserId(record.id),
+		};
+	}
+
+	static toDomainWithPosts(record: ExtendedModel<"user">): User<Post> {
+		return {
+			...UsersRepository.toDomain(record),
+			posts: Array.isArray(record.posts)
+				? record.posts.map((post) => ({
+						...post,
+						id: toPostId(post.id),
+						userId: toUserId(post.userId),
+					}))
+				: [],
+		};
 	}
 }

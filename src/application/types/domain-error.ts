@@ -7,7 +7,7 @@ export enum ErrorCodes {
 	FORBID_ERROR = 5,
 }
 
-export interface DomainError<TDetail = Record<string, never>> {
+export interface DomainError<TDetail = unknown> {
 	error: string;
 	code: ErrorCodes;
 	detail: TDetail;

@@ -1,6 +1,6 @@
 import type { z } from "zod";
 import { ValidationError } from "~/application/errors/validation.error";
-import { left } from "~/core/logic";
+import { fail } from "~/core/logic";
 
 export function Validate<T extends z.ZodTypeAny>(schema: T) {
 	return <TRest extends unknown[], TReturn>(
@@ -22,7 +22,7 @@ export function Validate<T extends z.ZodTypeAny>(schema: T) {
 		) {
 			const payload = schema.safeParse(data);
 			if (!payload.success) {
-				return left(new ValidationError(payload.error)) as TReturn;
+				return fail(new ValidationError(payload.error)) as TReturn;
 			}
 			return originalMethod.apply(this, [payload.data, ...rest]);
 		} as (data: z.infer<T>, ...rest: TRest) => TReturn;

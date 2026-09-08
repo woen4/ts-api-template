@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { NotFoundError } from "~/application/errors/not-found.error";
 import type {
 	IUseCase,
 	IUseCaseResponse,
 	RequestContext,
 } from "~/application/types";
 import { Validate, zSafeString } from "~/application/utils";
-import { right } from "~/core/logic";
+import { fail, ok } from "~/core/logic";
 import { toUserId } from "~/domain/ids";
 import type { IUsersRepository } from "~/infra/database/repositories";
 
@@ -26,12 +27,14 @@ export class GetUserUseCase
 
 	@Validate(schema)
 	async handle(data: GetUserRequest, _ctx: RequestContext) {
-		const _user = await this.usersRepository.findUnique({ id: data.id });
+		const user = await this.usersRepository.findUnique({ id: data.id });
 
-		return right({
+		if (!user) return fail(new NotFoundError(`User "${data.id}" not found`));
+
+		return ok({
 			message: "User retrieved successfully",
 			detail: {
-				name: "John Doe",
+				name: user.name,
 			},
 		});
 	}

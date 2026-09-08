@@ -7,7 +7,12 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"includes": ["**", "!**/index.d.ts"]
+		"includes": [
+			"**",
+			"!**/index.d.ts",
+			"!src/prisma/contract.d.ts",
+			"!src/prisma/contract.json"
+		]
 	},
 	"formatter": {
 		"enabled": true,

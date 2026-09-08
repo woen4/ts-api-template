@@ -1,0 +1,270 @@
+{
+  "schemaVersion": "1",
+  "targetFamily": "sql",
+  "target": "postgres",
+  "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
+  "roots": {
+    "posts": {
+      "model": "Post",
+      "namespace": "public"
+    },
+    "users": {
+      "model": "User",
+      "namespace": "public"
+    }
+  },
+  "domain": {
+    "namespaces": {
+      "public": {
+        "models": {
+          "Post": {
+            "fields": {
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "title": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "user": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "id": {
+                  "column": "id"
+                },
+                "title": {
+                  "column": "title"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "posts"
+            }
+          },
+          "User": {
+            "fields": {
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "posts": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "Post",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "id": {
+                  "column": "id"
+                },
+                "name": {
+                  "column": "name"
+                }
+              },
+              "namespaceId": "public",
+              "table": "users"
+            }
+          }
+        }
+      }
+    }
+  },
+  "storage": {
+    "namespaces": {
+      "public": {
+        "entries": {
+          "table": {
+            "posts": {
+              "columns": {
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "title": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "posts"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "users"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "posts_userId_idx_a489d58a",
+                  "prefix": "posts_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "users": {
+              "columns": {
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            }
+          }
+        },
+        "id": "public",
+        "kind": "postgres-schema"
+      }
+    },
+    "storageHash": "310ed5fd2ee0d74380e2e2f6e40578e5d52b674ba70fc663fca9f26773e07706"
+  },
+  "execution": {
+    "executionHash": "e142b02d630e8c6e0fa90d9fa6ff248a0376840641d33038aa8bb3be5ad4cbf1",
+    "mutations": {
+      "defaults": [
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "posts"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "users"
+          }
+        }
+      ]
+    }
+  },
+  "capabilities": {
+    "postgres": {
+      "distinctOn": true,
+      "jsonAgg": true,
+      "lateral": true,
+      "limit": true,
+      "orderBy": true,
+      "returning": true
+    },
+    "sql": {
+      "checkConstraint": true,
+      "defaultInInsert": true,
+      "enums": true,
+      "lateral": true,
+      "returning": true,
+      "scalarList": true
+    }
+  },
+  "extensions": {},
+  "meta": {},
+  "_generated": {
+    "warning": "⚠️  GENERATED FILE - DO NOT EDIT",
+    "message": "This file is automatically generated by \"prisma contract emit\".",
+    "regenerate": "To regenerate, run: prisma contract emit"
+  }
+}

@@ -5,6 +5,7 @@ import {
 	type IUseCaseResponse,
 	toRequestContext,
 } from "~/application/types";
+import { matchResult } from "~/core/logic";
 import { StatusErrorCodeMapper } from "./status-error-code-mapper";
 
 export const defaultHandler = <
@@ -16,18 +17,14 @@ export const defaultHandler = <
 	return async (ctx: Context) => {
 		let requestBody: Record<string, unknown>;
 
-		try {
-			if (["GET", "DELETE"].includes(ctx.req.method)) {
-				requestBody = {};
+		if (["GET", "DELETE"].includes(ctx.req.method)) {
+			requestBody = {};
+		} else {
+			if (ctx.req.header("Content-Type") === "application/json") {
+				requestBody = await ctx.req.json();
 			} else {
-				if (ctx.req.header("Content-Type") === "application/json") {
-					requestBody = await ctx.req.json();
-				} else {
-					requestBody = await ctx.req.parseBody();
-				}
+				requestBody = await ctx.req.parseBody();
 			}
-		} catch {
-			return ctx.json({ message: "Corpo de requisição inválido" }, 400);
 		}
 
 		const requestPayload = {
@@ -41,25 +38,22 @@ export const defaultHandler = <
 			toRequestContext(ctx.get("jwtPayload")),
 		);
 
-		if (response.isLeft())
-			return ctx.json(
-				response.value,
-				StatusErrorCodeMapper(response.value.code),
-			);
+		return matchResult(response, {
+			fail: (error) => ctx.json(error, StatusErrorCodeMapper(error.code)),
+			ok: (data) => {
+				const redirectTo = data.redirectTo;
 
-		const redirectTo = response.value.redirectTo;
+				if (!redirectTo) return ctx.json(data, 200);
 
-		if (redirectTo) {
-			const reqUrl = ctx.req.url;
-			const reqPath = ctx.req.path;
+				const reqUrl = ctx.req.url;
+				const reqPath = ctx.req.path;
 
-			const redirectUrl = /^(http|https):\/\//.test(redirectTo)
-				? redirectTo
-				: reqUrl.replace(reqPath, redirectTo);
+				const redirectUrl = /^(http|https):\/\//.test(redirectTo)
+					? redirectTo
+					: reqUrl.replace(reqPath, redirectTo);
 
-			return ctx.redirect(redirectUrl);
-		}
-
-		return ctx.json(response.value, 200);
+				return ctx.redirect(redirectUrl);
+			},
+		});
 	};
 };

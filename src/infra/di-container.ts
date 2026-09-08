@@ -1,4 +1,3 @@
-import type { PrismaClient } from "@prisma/client";
 import type { Constructor } from "awilix";
 import * as awilix from "awilix";
 
@@ -6,12 +5,12 @@ import * as UsersUseCase from "~/application/use-cases/users";
 
 import { mapObject } from "~/core/logic";
 import type { AsInstances } from "~/core/types/as-instances";
-import { prismaClient } from "./database";
+import { type Db, db } from "./database";
 import * as repositories from "./database/repositories";
 import * as providers from "./providers/mail-provider";
 
 type IDiContainer = {
-	prisma: PrismaClient;
+	db: Db;
 } & AsInstances<typeof UsersUseCase>;
 
 export const diContainer = awilix.createContainer<IDiContainer>({
@@ -30,7 +29,7 @@ for (const cls of Object.values(useCases)) {
 }
 
 diContainer.register({
-	prisma: awilix.asValue(prismaClient),
+	db: awilix.asValue(db),
 
 	...mapObject(useCases, (clsName, cls) => [
 		clsName,

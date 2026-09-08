@@ -5,7 +5,7 @@ import type {
 	RequestContext,
 } from "~/application/types";
 import { Validate, zSafeString } from "~/application/utils";
-import { right } from "~/core/logic";
+import { ok } from "~/core/logic";
 import { toUserId } from "~/domain/ids";
 import type { IUsersRepository } from "~/infra/database/repositories";
 
@@ -31,8 +31,8 @@ export class CreateUserUseCase
 			name: "John Doe",
 		});
 
-		return right({
-			message: "User retrieved successfully",
+		return ok({
+			message: "User created successfully",
 			detail: {
 				id: user.id,
 			},

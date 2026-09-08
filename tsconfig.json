@@ -27,7 +27,7 @@
 		// This config is for other projects import types from this project
 		"composite": true
 	},
-	"include": ["./src/**/*.ts"],
+	"include": ["./src/**/*.ts", "./src/**/*.json"],
 	"exclude": [
 		"./node_modules/*",
 		"./src/**/*.spec.ts",

@@ -1,3 +1,2 @@
-import { PrismaClient } from "@prisma/client";
-
-export const prismaClient = new PrismaClient();
+export { db } from "~/prisma/db";
+export type Db = typeof import("~/prisma/db").db;

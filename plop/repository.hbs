@@ -1,49 +1,57 @@
-import type { Prisma, PrismaClient } from "@prisma/client";
-import type { Except } from "type-fest";
+import type { AsyncMaybe } from "~/core/types/maybe";
 import type { {{singularize (capitalize name)}} } from "~/domain/entities";
 {{{brandImports brandedFields}}}
+import type { Db } from "~/infra/database";
 import type { ExtendedModel } from "~/infra/database/repositories/types";
-import type { AsyncMaybe } from "~/core/types/maybe";
+
+type {{singularize (capitalize name)}}Collection = Db["orm"]["public"]["{{singularize (capitalize name)}}"];
+
+export type {{singularize (capitalize name)}}Where = Parameters<{{singularize (capitalize name)}}Collection["where"]>[0];
+export type {{singularize (capitalize name)}}Create = Parameters<{{singularize (capitalize name)}}Collection["create"]>[0];
+export type {{singularize (capitalize name)}}Update = Parameters<
+	ReturnType<{{singularize (capitalize name)}}Collection["where"]>["update"]
+>[0];
 
 export type I{{pluralize (capitalize name)}}Repository = {{pluralize (capitalize name)}}Repository
 
 export class {{pluralize (capitalize name)}}Repository {
 	static usedAs = "{{pluralize (lowercase name)}}Repository";
 
-	constructor(private readonly prisma: PrismaClient) {}
+	constructor(private readonly db: Db) {}
 
-	create(data: {{singularize (capitalize name)}}) {
-		return this.prisma.{{singularize (lowercase name)}}.create({ data }).then(({{singularize (lowercase name)}}) => {{pluralize (capitalize name)}}Repository.toDomain({{singularize (lowercase name)}}));
+	private get {{pluralize (lowercase name)}}() {
+		return this.db.orm.public.{{singularize (capitalize name)}};
 	}
 
-	update(params: {
-		where: Prisma.{{singularize (capitalize name)}}WhereUniqueInput;
-		data: Prisma.{{singularize (capitalize name)}}UpdateInput;
-	}) {
-		return this.prisma.{{singularize (lowercase name)}}.update(params);
+	create(data: {{singularize (capitalize name)}}Create) {
+		return this.{{pluralize (lowercase name)}}
+			.create(data)
+			.then(({{singularize (lowercase name)}}) => {{pluralize (capitalize name)}}Repository.toDomain({{singularize (lowercase name)}}));
 	}
 
-	delete(where: Prisma.{{singularize (capitalize name)}}WhereUniqueInput) {
-		return this.prisma.{{singularize (lowercase name)}}.delete({ where });
+	update(params: { where: {{singularize (capitalize name)}}Where; data: {{singularize (capitalize name)}}Update }) {
+		return this.{{pluralize (lowercase name)}}.where(params.where).update(params.data);
 	}
 
-	async findMany(
-		params?: Except<Prisma.{{singularize (capitalize name)}}FindManyArgs, "include" | "select" | "omit">,
-	): Promise<{{singularize (capitalize name)}}[]> {
-		const {{pluralize (lowercase name)}} = await this.prisma.{{singularize (lowercase name)}}.findMany(params);
-
-		return {{pluralize (lowercase name)}}.map({{pluralize (capitalize name)}}Repository.toDomain)
+	delete(where: {{singularize (capitalize name)}}Where) {
+		return this.{{pluralize (lowercase name)}}.where(where).delete();
 	}
 
-	async findUnique(where: Prisma.{{singularize (capitalize name)}}WhereUniqueInput): AsyncMaybe<{{singularize (capitalize name)}}> {
-		const {{singularize (lowercase name)}} = await this.prisma.{{singularize (lowercase name)}}.findUnique({ where });
+	async findMany(where?: {{singularize (capitalize name)}}Where): Promise<{{singularize (capitalize name)}}[]> {
+		const {{pluralize (lowercase name)}} = await (where ? this.{{pluralize (lowercase name)}}.where(where) : this.{{pluralize (lowercase name)}}).all();
+
+		return {{pluralize (lowercase name)}}.map(({{singularize (lowercase name)}}) => {{pluralize (capitalize name)}}Repository.toDomain({{singularize (lowercase name)}}));
+	}
+
+	async findUnique(where: {{singularize (capitalize name)}}Where): AsyncMaybe<{{singularize (capitalize name)}}> {
+		const {{singularize (lowercase name)}} = await this.{{pluralize (lowercase name)}}.where(where).first();
 
 		if (!{{singularize (lowercase name)}}) return null;
 
 		return {{pluralize (capitalize name)}}Repository.toDomain({{singularize (lowercase name)}})
 	}
 
-	static toDomain(record: ExtendedModel<"{{singularize (lowercase name)}}">): {{singularize (capitalize name)}} {
+	static toDomain(record: ExtendedModel<"{{singularize (capitalize name)}}">): {{singularize (capitalize name)}} {
 		return {
 			...record,
 {{{brandAssignments brandedFields "record"}}}
